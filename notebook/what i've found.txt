@@ -1,0 +1,44 @@
+1. 시간은 연속이 아님. => 전처리는 통합해서 하되, 시계열처리는 따로 해야함.
+=> indices_to_cut = [93601, 295201, 421201, 507602, 745202]
+
+2. 통합시 최소, 최대가 같은 애들이 있음
+=> selected_columns = /
+['C01', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16', 'C17', 'C20', 'C21', 'C23', 'C24', 'C25', 'C27', 'C28', 'C30', 'C31', 'C32', 'C33', 'C34', 'C35', 'C37', 'C40', 'C41', 'C42', 'C43', 'C44', 'C45', 'C46', 'C47', 'C48', 'C50', 'C51', 'C53', 'C54', 'C56', 'C57', 'C58', 'C59', 'C60', 'C61', 'C62', 'C64', 'C65', 'C66', 'C67', 'C68', 'C70', 'C71', 'C72', 'C73', 'C74', 'C75', 'C76', 'C77', 'C78', 'C79', 'C80', 'C81', 'C83', 'C84', 'C86']
+	
+3. 데이터 전체에 nan은 없음
+
+
+
+
+4. TimeSeries prefetch 실험
+prefetch 4:
+Data loading time: 23.019022500000002
+##################################################
+epoch 1 execution time: 5.397899400000004
+epoch 2 execution time: 5.2754659
+epoch 3 execution time: 5.296153000000004
+epoch 4 execution time: 5.239982899999994
+epoch 5 execution time: 5.328410199999993
+epoch 6 execution time: 5.439398300000001
+epoch 7 execution time: 5.351080100000004
+epoch 8 execution time: 5.363244199999997
+epoch 9 execution time: 5.288109399999996
+epoch 10 execution time: 5.417161800000002
+##################################################
+Total execution time: 53.3970794
+
+prefetch 100:
+Data loading time: 22.745662199999998
+##################################################
+epoch 1 execution time: 5.392523800000003 data count :  10462
+epoch 2 execution time: 5.261056799999999 data count :  10462
+epoch 3 execution time: 5.151317900000002 data count :  10462
+epoch 4 execution time: 5.338498399999999 data count :  10462
+epoch 5 execution time: 5.2725857000000005 data count :  10462
+epoch 6 execution time: 5.337843200000002 data count :  10462
+epoch 7 execution time: 5.3003234000000035 data count :  10462
+epoch 8 execution time: 5.332253800000004 data count :  10462
+epoch 9 execution time: 5.265641099999996 data count :  10462
+epoch 10 execution time: 5.258651400000005 data count :  10462
+##################################################
+Total execution time: 52.9109103
