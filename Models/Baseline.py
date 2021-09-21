@@ -1,17 +1,26 @@
+from abc import ABC
+
 import tensorflow as tf
+from tensorflow.keras import Model
 from tensorflow.keras.layers import Bidirectional, GRU, Dense
 
-import keras_tuner as kt
+from tensorflow.keras.optimizers import Adam, Nadam
+from tensorflow_addons.optimizers import AdamW
+
+from kerastuner import HyperModel
 from keras_tuner import Hyperband
 
-class Baseline(tf.keras.Model):
-    def __init__(self, n_features, hidden=100, num_layers=3):
+from settings import MAX_EPOCH, SEARCH_SAVE_DIRECTORY
+
+
+class Baseline(Model, ABC):
+    def __init__(self, n_features, hidden=128, num_layers=3):
         super(Baseline, self).__init__()
         self.rnn_list = [Bidirectional(GRU(hidden, return_sequences=True))
                          for _ in range(num_layers - 1)] + [Bidirectional(GRU(hidden))]
         self.fc = Dense(n_features)
 
-    def call(self, x):
+    def call(self, x, training=None, mask=None):
         batched_first_values = x[:, 0, :]
         for layer in self.rnn_list:
             x = layer(x)
@@ -19,19 +28,55 @@ class Baseline(tf.keras.Model):
         x = self.fc(x)
         return x + batched_first_values
 
-"""
-class 사용법 : https://ichi.pro/ko/keras-tuner-mich-hiplot-eul-sayonghan-singyeongmang-haipeo-palamiteo-tyuning-129980331205114
-함수형 : https://www.tensorflow.org/tutorials/keras/keras_tuner?hl=ko
-kt 가 알아서 저장을 해주는듯? => kt.Hyperband의 'directory'를 건드려주면 되는 것 같은데?
-                        => model을 class로 구현해버리고 builder에서는 epoch만 받고, directory는 settings.py에서.
-                        => callback은 만들긴 해야하는듯 (search해서 best_hps 찾고 그거 가져와서 다시 fit하기 때문)
-"""
-def make_builder(n_features):
-    def model_builder(hp):
-        hp_hidden = hp.Int
-        hp_num_layers = hp.Int
-        hp.Choice('units', [8, 16, 32])
-        model = Baseline(n_features)
+
+class BaselineHyperModel(HyperModel):
+    def __init__(self, n_features, **kwargs):
+        super(BaselineHyperModel, self).__init__(**kwargs)
+        self.n_features = n_features
+
+        # User choice part
+        # self.hiddens = [32, 64, 128, 256]
+        # self.layers = [1, 2, 3, 4]
+        # self.lrs = [1e-2, 1e-3, 1e-4]
+        # self.optimizer = ["Adam", "Nadam", "AdamW"]
+        # self.optimizer_func = [Adam, Nadam, AdamW]
+        self.hiddens = [32, 64]
+        self.layers = [1, 2]
+        self.lrs = [1e-2]
+        self.optimizer = ["Adam", "Nadam", "AdamW"]
+        self.optimizer_func = [Adam, Nadam, AdamW]
+
+    def build(self, hp):
+        hidden = hp.Choice("hidden", self.hiddens)
+        num_layers = hp.Choice("layers", self.layers)
+        model = Baseline(n_features=self.n_features, hidden=hidden, num_layers=num_layers)
+        optimizer = hp.Choice("optimizer", self.optimizer)
+        for func, opt in zip(self.optimizer_func, self.optimizer):
+            if optimizer == opt:
+                if opt == "AdamW":
+                    with hp.conditional_scope("optimizer", [opt]):
+                        model.compile(optimizer=func(weight_decay=0.01,
+                                                     learning_rate=hp.Choice("lr", self.lrs)),
+                                      loss="MSE")
+                else:
+                    with hp.conditional_scope("optimizer", [opt]):
+                        model.compile(optimizer=func(learning_rate=hp.Choice("lr", self.lrs)),
+                                      loss="MSE")
+                break
+        return model
 
 
-kt.Hyperband
+def get_baseline_tuner(n_features):
+    hypermodel = BaselineHyperModel(n_features=n_features)
+    tuner = Hyperband(hypermodel,
+                      objective='val_loss',
+                      max_epochs=MAX_EPOCH,
+                      directory=SEARCH_SAVE_DIRECTORY,
+                      project_name='baseline'
+                      )
+    return tuner
+
+
+if __name__ == "__main__":
+    pass
+    # TODO : make test code

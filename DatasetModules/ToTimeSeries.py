@@ -15,25 +15,25 @@ class HAIDataLoader(tf.data.Dataset, ABC):
                                                  stride=stride, batch_size=batch_size,
                                                  shuffle=True)
                              for elt in np_data_list]
-        else:
-            seq_data_list = [TimeseriesGenerator(data=elt, targets=elt, length=length,
-                                                 stride=stride, batch_size=batch_size)
-                             for elt in np_data_list]
 
-        def gen():
-            for seq_data in seq_data_list:
-                for x, y in seq_data:
-                    yield x, y
+            def gen():
+                for seq_data in seq_data_list:
+                    for x, y in seq_data:
+                        yield x, y
 
-        std_x_shape, std_y_shape = seq_data_list[0][0][0].shape, seq_data_list[0][0][1].shape
-        # print(f'x_shape: {std_x_shape}   y_shape: {std_y_shape}')
-        return tf.data.Dataset.from_generator(
-            gen,
-            output_signature=(
-                tf.TensorSpec(shape=std_x_shape, dtype=tf.float32),
-                tf.TensorSpec(shape=std_y_shape, dtype=tf.float32)
+            std_x_shape, std_y_shape = seq_data_list[0][0][0].shape, seq_data_list[0][0][1].shape
+            # print(f'x_shape: {std_x_shape}   y_shape: {std_y_shape}')
+            return tf.data.Dataset.from_generator(
+                gen,
+                output_signature=(
+                    tf.TensorSpec(shape=std_x_shape, dtype=tf.float32),
+                    tf.TensorSpec(shape=std_y_shape, dtype=tf.float32)
+                )
             )
-        )
+        else:
+            return [TimeseriesGenerator(data=elt, targets=elt, length=length,
+                                        stride=1, batch_size=batch_size)
+                    for elt in np_data_list]
 
 
 if __name__ == "__main__":
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     data_loading_start = time.perf_counter()
     np_data_list, _, _ = load_dataset('../datasets/train/')
-    dataset = HAIDataLoader(np_data_list)  # .prefetch(100)
+    dataset = HAIDataLoader(np_data_list)  # .prefetch(10)
     print("Data loading time:", time.perf_counter() - data_loading_start)
     print("#"*50)
 

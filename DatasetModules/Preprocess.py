@@ -31,8 +31,6 @@ def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, val
         else:
             return [data_np[itc[i]:itc[i + 1]] for i in range(len(itc) - 1)], selected_cols, scaler
     else:  # test
-        if validation:
-            attack = data_list[0]['attack']
         integrated = pd.DataFrame(columns=selected_cols)
         for i, data in enumerate(data_list):
             integrated = integrated.append(data[selected_cols])
@@ -42,13 +40,13 @@ def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, val
         if ewm:
             if validation:
                 return [pd.DataFrame(data_np[itc[i]:itc[i + 1]]).ewm(alpha=0.9).mean().values
-                        for i in range(len(itc) - 1)], attack
+                        for i in range(len(itc) - 1)], data_list[0]['attack'].values
             else:
                 return [pd.DataFrame(data_np[itc[i]:itc[i + 1]]).ewm(alpha=0.9).mean().values
                         for i in range(len(itc) - 1)]
         else:
             if validation:
-                return [data_np[itc[i]:itc[i + 1]] for i in range(len(itc) - 1)], attack
+                return [data_np[itc[i]:itc[i + 1]] for i in range(len(itc) - 1)], data_list[0]['attack'].values
             else:
                 return [data_np[itc[i]:itc[i + 1]] for i in range(len(itc) - 1)]
 
@@ -68,3 +66,18 @@ def get_selected_columns(integrated):
         if mins[col] == maxes[col]:
             selected_columns.remove(col)
     return sorted(list(selected_columns))
+
+
+def train_valid_split(np_data_list, valid_ratio=0.2):
+    np_train_list = []
+    np_valid_list = []
+    for np_data in np_data_list:
+        cut_idx = int(len(np_data) * (1 - valid_ratio))
+        np_train_list.append(np_data[:cut_idx, :])
+        np_valid_list.append(np_data[cut_idx:, :])
+    return np_train_list, np_valid_list
+
+
+if __name__ == "__main__":
+    train, selected_cols, scaler = load_dataset('../datasets/train/')
+    test = load_dataset('../datasets/test/', selected_cols, scaler)
