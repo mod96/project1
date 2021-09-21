@@ -35,14 +35,9 @@ class BaselineHyperModel(HyperModel):
         self.n_features = n_features
 
         # User choice part
-        # self.hiddens = [32, 64, 128, 256]
-        # self.layers = [1, 2, 3, 4]
-        # self.lrs = [1e-2, 1e-3, 1e-4]
-        # self.optimizer = ["Adam", "Nadam", "AdamW"]
-        # self.optimizer_func = [Adam, Nadam, AdamW]
-        self.hiddens = [32, 64]
-        self.layers = [1, 2]
-        self.lrs = [1e-2]
+        self.hiddens = [32, 64, 128, 256]
+        self.layers = [1, 2, 3, 4]
+        self.lrs = [1e-2, 1e-3, 1e-4]
         self.optimizer = ["Adam", "Nadam", "AdamW"]
         self.optimizer_func = [Adam, Nadam, AdamW]
 
