@@ -7,11 +7,11 @@ from settings import TRAIN_FOLDER, MAX_EPOCH, MODEL_SAVE_FOLDER, EARLY_STOP_PATI
 from Callbacks import ClearTrainingOutput, CheckpointSave, EarlyStopAndSave
 
 
-def SearchAndTrain(args, get_tuner):
+def SearchAndTrain(args, get_tuner, **kwargs):
     train_dataset, valid_dataset, selected_cols, scaler = prepare_train_datasets(args)
     n_features = len(selected_cols)
 
-    tuner = get_tuner(n_features)
+    tuner = get_tuner(n_features, **kwargs)
     tuner.search(train_dataset, validation_data=valid_dataset,
                  callbacks=[ClearTrainingOutput()])
     tuner.results_summary()
