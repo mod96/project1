@@ -5,10 +5,10 @@ SUBMISSION_PATH = 'datasets/sample_submission.csv'
 
 MODEL_SAVE_FOLDER = 'saved_models/'
 
-MAX_EPOCH = 200
+MAX_EPOCH = 400
 SEARCH_SAVE_DIRECTORY = 'search_saved/'
 
-EARLY_STOP_PATIENCE = 20
+EARLY_STOP_PATIENCE = 50
 
 
 """

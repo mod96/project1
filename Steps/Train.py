@@ -7,7 +7,7 @@ from settings import TRAIN_FOLDER, MAX_EPOCH, MODEL_SAVE_FOLDER, EARLY_STOP_PATI
 from Callbacks import ClearTrainingOutput, CheckpointSave, EarlyStopAndSave
 
 
-def SearchAndTrain(args, get_tuner, **kwargs):
+def search_and_train(args, get_tuner, **kwargs):
     train_dataset, valid_dataset, selected_cols, scaler = prepare_train_datasets(args)
     n_features = len(selected_cols)
 
@@ -35,7 +35,7 @@ def SearchAndTrain(args, get_tuner, **kwargs):
         model.load_weights(latest_path)
 
     if not is_final:
-        model.fit(train_dataset, validation_data=valid_dataset, epochs=MAX_EPOCH,
+        model.fit(train_dataset, validation_data=valid_dataset, epochs=MAX_EPOCH - latest_epoch,
                   callbacks=[CheckpointSave(args.model_name),
                              EarlyStopAndSave(args.model_name, patience=EARLY_STOP_PATIENCE,
                                               restore_best_weights=True)

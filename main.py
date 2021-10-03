@@ -2,7 +2,7 @@ import argparse
 
 from Models import get_baseline_tuner, get_ViT_tuner
 
-from Steps import SearchAndTrain, get_threshold, test_and_save
+from Steps import search_and_train, get_threshold, test_and_save
 
 
 def main():
@@ -20,12 +20,12 @@ def main():
     args = parser.parse_args()
 
     if args.model_name == "baseline":
-        model, selected_cols, scaler = SearchAndTrain(args, get_baseline_tuner)
+        model, selected_cols, scaler = search_and_train(args, get_baseline_tuner)
         threshold = get_threshold(model, selected_cols, scaler, args)
         test_and_save(model, selected_cols, scaler, threshold, args)
     elif args.model_name == "transformer":
-        model, selected_cols, scaler = SearchAndTrain(args, get_ViT_tuner,
-                                                      timelen=args.sequence_length)
+        model, selected_cols, scaler = search_and_train(args, get_ViT_tuner,
+                                                        timelen=args.sequence_length)
         threshold = get_threshold(model, selected_cols, scaler, args)
         test_and_save(model, selected_cols, scaler, threshold, args)
 

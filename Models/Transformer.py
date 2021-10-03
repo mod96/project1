@@ -38,7 +38,7 @@ class ViTEncoder(Model, ABC):
         for encoder in self.Encoders:
             x = encoder(x)
         x = self.Flatten(x)
-        x = self.Dense(x, activation='linear')
+        x = self.Dense(x)
         out = self.Add([inputs[:, -1, :], x])  # possible : 0 instead of -1
         return out
 
@@ -50,13 +50,13 @@ class ViTEncoderHyperModel(HyperModel):
         self.timelen = timelen
 
         # User choice part
-        self.n_encoders = [1, 2, 3]
-        self.n_heads = [2, 4, 8]
-        self.att_dropouts = [0, 0.1, 0.2]
-        self.fwd_nums = [1, 2, 3]
-        self.fwd_dropouts = [0, 0.1, 0.2]
+        self.n_encoders = [3, 4]
+        self.n_heads = [8, 16]
+        self.att_dropouts = [0.2, 0.4]
+        self.fwd_nums = [3, 4]
+        self.fwd_dropouts = [0.2, 0.4]
 
-        self.lrs = [1e-2, 1e-3, 1e-4]
+        self.lrs = [1e-3, 1e-4]
         self.optimizer = ["Adam", "Nadam", "AdamW"]
         self.optimizer_func = [Adam, Nadam, AdamW]
 
