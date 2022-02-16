@@ -65,7 +65,7 @@ def get_baseline_tuner(n_features):
     hypermodel = BaselineHyperModel(n_features=n_features)
     tuner = Hyperband(hypermodel,
                       objective='val_loss',
-                      max_epochs=MAX_EPOCH,
+                      max_epochs=MAX_EPOCH//4,
                       directory=SEARCH_SAVE_DIRECTORY,
                       project_name='baseline'
                       )

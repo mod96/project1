@@ -9,13 +9,12 @@ def get_threshold(model, selected_cols, scaler, args):
     np_validation_list, attack = load_dataset(VALIDATION_FOLDER,
                                               selected_cols=selected_cols,
                                               scaler=scaler,
-                                              ewm=False,
                                               validation=True)
     validation_dataset = HAIDataLoader(np_validation_list,
                                        length=args.sequence_length,
                                        stride=1,
                                        batch_size=args.batch_size,
                                        train=False)
-    validation_result = test_and_get_list(model, validation_dataset, np_validation_list, args.sequence_length)
+    validation_result = test_and_get_list(model, validation_dataset, np_validation_list, args, attack=attack)
 
-    return find_th(args, attack, validation_result)
+    return find_th(args, attack, validation_result)[0]

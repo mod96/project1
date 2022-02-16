@@ -7,7 +7,7 @@ from settings import TRAIN_FOLDER, MAX_EPOCH, MODEL_SAVE_FOLDER, EARLY_STOP_PATI
 from Callbacks import ClearTrainingOutput, CheckpointSave, EarlyStopAndSave
 
 
-def SearchAndTrain(args, get_tuner, **kwargs):
+def search_and_train(args, get_tuner, **kwargs):
     train_dataset, valid_dataset, selected_cols, scaler = prepare_train_datasets(args)
     n_features = len(selected_cols)
 
@@ -26,7 +26,10 @@ def SearchAndTrain(args, get_tuner, **kwargs):
             latest_path = path[:-6]
             is_final = True
             break
-        epoch = int(path[:-6].split('\\')[-1])
+        try:
+            epoch = int(path[:-6].split('\\')[-1])
+        except:
+            epoch = int(path[:-6].split('/')[-1])
         if epoch > latest_epoch:
             latest_epoch = epoch
             latest_path = path[:-6]
@@ -35,7 +38,7 @@ def SearchAndTrain(args, get_tuner, **kwargs):
         model.load_weights(latest_path)
 
     if not is_final:
-        model.fit(train_dataset, validation_data=valid_dataset, epochs=MAX_EPOCH,
+        model.fit(train_dataset, validation_data=valid_dataset, epochs=MAX_EPOCH - latest_epoch,
                   callbacks=[CheckpointSave(args.model_name),
                              EarlyStopAndSave(args.model_name, patience=EARLY_STOP_PATIENCE,
                                               restore_best_weights=True)
@@ -46,7 +49,7 @@ def SearchAndTrain(args, get_tuner, **kwargs):
 
 
 def prepare_train_datasets(args):
-    np_train_list, selected_cols, scaler = load_dataset(TRAIN_FOLDER)
+    np_train_list, selected_cols, scaler = load_dataset(TRAIN_FOLDER, scaler_type=args.scaler_type)
     np_train_list, np_valid_list = train_valid_split(np_train_list)
     train_dataset = HAIDataLoader(np_train_list,
                                   length=args.sequence_length,

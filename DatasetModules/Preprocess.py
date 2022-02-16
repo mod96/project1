@@ -1,10 +1,10 @@
 import pandas as pd
 import glob
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
-def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, validation=False):
+def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, validation=False, scaler_type='standard'):
     """
     :param data_folder_dir: directory of dataset folder. '.../folder/'
     :param selected_cols: selected columns to use. If None, automatically generates and returns
@@ -12,6 +12,7 @@ def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, val
     :param ewm: whether to use Exponential smoothing.
     :return: if cols, scaler are None, gives list of np arrays. else, given with cols, scaler (train)
     """
+    print(f"loading dataset...from {data_folder_dir}. scaler_type={scaler_type}")
     dirs = glob.glob(data_folder_dir + '*.csv')
     data_list = [pd.read_csv(path) for path in dirs]
     itc = [0]  # indices to cut
@@ -23,7 +24,7 @@ def load_dataset(data_folder_dir, selected_cols=None, scaler=None, ewm=True, val
         selected_cols = get_selected_columns(integrated)
         data_pd = integrated[selected_cols]
         assert check_isnan(data_pd), "there exist nan in dataset"
-        scaler = StandardScaler()
+        scaler = StandardScaler() if scaler_type == 'standard' else MinMaxScaler()
         data_np = scaler.fit_transform(data_pd)
         if ewm:
             return [pd.DataFrame(data_np[itc[i]:itc[i+1]]).ewm(alpha=0.9).mean().values

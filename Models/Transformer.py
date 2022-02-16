@@ -14,7 +14,9 @@ from tensorflow_addons.optimizers import AdamW
 from kerastuner import HyperModel
 from keras_tuner import Hyperband
 
-from settings import MAX_EPOCH, SEARCH_SAVE_DIRECTORY
+from settings import SEARCH_SAVE_DIRECTORY
+
+from Callbacks import LRSchedule
 """
 ViT paper: https://arxiv.org/pdf/2010.11929.pdf
 keras simplified: https://keras.io/examples/vision/image_classification_with_vision_transformer/
@@ -23,14 +25,14 @@ keras simplified: https://keras.io/examples/vision/image_classification_with_vis
 
 class ViTEncoder(Model, ABC):
     def __init__(self, n_features, timelen, n_encoders=3,
-                 n_heads=8, embed_dim=32, att_dropout=0,
+                 n_heads=8, embed_dim=128, att_dropout=0,
                  fwd_num=1, fwd_dropout=0, fwd_dim=128):
         super(ViTEncoder, self).__init__()
         self.PatchEmbedding = PatchEmbedding(timelen, embed_dim=embed_dim)
         self.Encoders = [Encoder(n_heads, embed_dim, att_dropout,
                                  fwd_num, fwd_dropout, fwd_dim) for _ in range(n_encoders)]
         self.Flatten = Flatten()
-        self.Dense = Dense(n_features, activation='linear')
+        self.Dense = Dense(n_features, activation='relu')
         self.Add = Add()
 
     def call(self, inputs, training=None, mask=None):
@@ -38,8 +40,8 @@ class ViTEncoder(Model, ABC):
         for encoder in self.Encoders:
             x = encoder(x)
         x = self.Flatten(x)
-        x = self.Dense(x, activation='linear')
-        out = self.Add([inputs[:, -1, :], x])  # possible : 0 instead of -1
+        x = self.Dense(x)
+        out = self.Add([inputs[:, 0, :], x])  # possible : 0 instead of -1
         return out
 
 
@@ -50,15 +52,15 @@ class ViTEncoderHyperModel(HyperModel):
         self.timelen = timelen
 
         # User choice part
-        self.n_encoders = [1, 2, 3]
-        self.n_heads = [2, 4, 8]
-        self.att_dropouts = [0, 0.1, 0.2]
-        self.fwd_nums = [1, 2, 3]
-        self.fwd_dropouts = [0, 0.1, 0.2]
+        self.n_encoders = [8]
+        self.n_heads = [8]
+        self.att_dropouts = [0.2]
+        self.fwd_nums = [4]
+        self.fwd_dropouts = [0.2]
 
-        self.lrs = [1e-2, 1e-3, 1e-4]
-        self.optimizer = ["Adam", "Nadam", "AdamW"]
-        self.optimizer_func = [Adam, Nadam, AdamW]
+        self.lrs = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]
+        self.optimizer = ["Adam"]
+        self.optimizer_func = [Adam]
 
     def build(self, hp):
         model = ViTEncoder(self.n_features, self.timelen,
@@ -75,11 +77,11 @@ class ViTEncoderHyperModel(HyperModel):
                 if opt == "AdamW":
                     with hp.conditional_scope("optimizer", [opt]):
                         model.compile(optimizer=func(weight_decay=0.01,
-                                                     learning_rate=hp.Choice("lr", self.lrs)),
+                                                     learning_rate=hp.Choice("lrs", self.lrs)),
                                       loss="MSE")
                 else:
                     with hp.conditional_scope("optimizer", [opt]):
-                        model.compile(optimizer=func(learning_rate=hp.Choice("lr", self.lrs)),
+                        model.compile(optimizer=func(learning_rate=hp.Choice("lrs", self.lrs)),
                                       loss="MSE")
                 break
         return model
@@ -89,7 +91,7 @@ def get_ViT_tuner(n_features, timelen):
     hypermodel = ViTEncoderHyperModel(n_features=n_features, timelen=timelen)
     tuner = Hyperband(hypermodel,
                       objective='val_loss',
-                      max_epochs=MAX_EPOCH//2,
+                      max_epochs=50,
                       directory=SEARCH_SAVE_DIRECTORY,
                       project_name='transformer'
                       )
