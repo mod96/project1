@@ -26,7 +26,10 @@ def search_and_train(args, get_tuner, **kwargs):
             latest_path = path[:-6]
             is_final = True
             break
-        epoch = int(path[:-6].split('\\')[-1])
+        try:
+            epoch = int(path[:-6].split('\\')[-1])
+        except:
+            epoch = int(path[:-6].split('/')[-1])
         if epoch > latest_epoch:
             latest_epoch = epoch
             latest_path = path[:-6]
@@ -46,7 +49,7 @@ def search_and_train(args, get_tuner, **kwargs):
 
 
 def prepare_train_datasets(args):
-    np_train_list, selected_cols, scaler = load_dataset(TRAIN_FOLDER)
+    np_train_list, selected_cols, scaler = load_dataset(TRAIN_FOLDER, scaler_type=args.scaler_type)
     np_train_list, np_valid_list = train_valid_split(np_train_list)
     train_dataset = HAIDataLoader(np_train_list,
                                   length=args.sequence_length,

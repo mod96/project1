@@ -16,7 +16,7 @@ def test_and_save(model, selected_cols, scaler, threshold, args):
                                  stride=1,
                                  batch_size=args.batch_size,
                                  train=False)
-    test_result = test_and_get_list(model, test_dataset, np_test_list, args.sequence_length)
+    test_result = test_and_get_list(model, test_dataset, np_test_list, args)
     final = put_labels(test_result, threshold)
 
     submission = pd.read_csv(SUBMISSION_PATH)
